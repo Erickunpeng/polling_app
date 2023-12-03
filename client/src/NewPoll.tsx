@@ -5,19 +5,20 @@ import {isRecord} from "./record";
 
 type NewPollProps = {
     onBackClick: () => void,
+    onCreateClick: (name: string) => void
 }
 
 type NewPollState = {
     name: string,
     minutes: string,
-    options: string
+    options: string[]
     error: string
 }
 
 export class NewPoll extends Component<NewPollProps, NewPollState> {
     constructor(props: NewPollProps) {
         super(props);
-        this.state = {name: "", minutes: "60", options: "", error: ""}
+        this.state = {name: "", minutes: "", options: [], error: ""}
     }
 
     render = (): JSX.Element => {
@@ -67,14 +68,16 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
     };
 
     doOptionsChange = (evt: ChangeEvent<HTMLTextAreaElement>): void => {
-        this.setState({options: evt.target.value, error: ""});
+        const optionsText = evt.target.value;
+        const options: string[] = optionsText.split('\n').filter(option => option.trim() !== '');
+        this.setState({options: options, error: ""});
     };
 
     doCreateClick = (): void => {
         // Verify that the user entered all required information.
         if (this.state.name.trim().length === 0 ||
             this.state.minutes.trim().length === 0 ||
-            this.state.options.trim().length === 0) {
+            this.state.options.length === 0) {
             this.setState({error: "a required field is missing."});
             return;
         }
@@ -113,8 +116,11 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
             console.error("bad data from /api/add: not a record", data);
             return;
         }
-
-        this.props.onBackClick();  // show the updated list
+        if (typeof data.name === 'string') {
+            this.props.onCreateClick(data.name);
+        } else {
+            this.doAddError("The response did not contain a valid 'name'");
+        }
     };
 
     doAddError = (msg: string): void => {

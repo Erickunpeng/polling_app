@@ -90,10 +90,10 @@ export class PollList extends Component<ListProps, ListState> {
 
         const polls: Poll[] = [];
         for (const val of data.polls) {
-            const auction = parsePoll(val);
-            if (auction === undefined)
+            const poll = parsePoll(val);
+            if (poll === undefined)
                 return;
-            polls.push(auction);
+            polls.push(poll);
         }
         this.setState({polls, now: Date.now()});  // fix time also
     };

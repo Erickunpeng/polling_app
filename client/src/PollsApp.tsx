@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {PollList} from "./PollList";
 import {NewPoll} from "./NewPoll";
 
-type Page = "start" | "new" | {kind: "details", name: string} | "result"
+type Page = "start" | "new" | {kind: "details", name: string}
 
 const DEBUG: boolean = false;
 
@@ -17,7 +17,6 @@ export class PollsApp extends Component<{}, PollsAppState> {
 
     constructor(props: {}) {
         super(props);
-
         this.state = {page: "start", msg: ""};
     }
 
@@ -26,8 +25,6 @@ export class PollsApp extends Component<{}, PollsAppState> {
             return this.renderStartScreen()
         } else if (this.state.page === "new") {
             return this.renderNewPoll()
-        } else if (this.state.page === "result") {
-            return this.renderPollResult()
         } else { // details
             return this.renderPollDetails()
         }
@@ -40,19 +37,11 @@ export class PollsApp extends Component<{}, PollsAppState> {
 
     renderNewPoll = (): JSX.Element => {
         if (DEBUG) console.debug("rendering add page");
-        return <NewPoll onBackClick={this.doBackClick}/>;
+        return <NewPoll onBackClick={this.doBackClick} onCreateClick={this.doPollClick}/>;
     }
 
     renderPollDetails = (): JSX.Element => {
         if (DEBUG) console.debug(`rendering details page for "${this.state.page}"`);
-        return (
-            <div>
-
-            </div>
-        )
-    }
-
-    renderPollResult = (): JSX.Element => {
         return (
             <div>
 
