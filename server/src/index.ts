@@ -1,5 +1,5 @@
 import express, { Express } from "express";
-import {list, get, add} from './routes';
+import {list, get, add, vote} from './routes';
 import bodyParser from 'body-parser';
 
 
@@ -9,5 +9,6 @@ const app: Express = express();
 app.use(bodyParser.json());
 app.get("/api/get", get)
 app.post("/api/add", add)
+app.post("/api/vote", vote)
 app.get("/api/list", list)
 app.listen(port, () => console.log(`Server listening on ${port}`));

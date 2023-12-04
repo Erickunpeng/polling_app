@@ -1,16 +1,18 @@
-import {Poll} from "./Poll";
-import {Component} from "react";
+import {parsePoll, Poll} from "./Poll";
+import {ChangeEvent, Component} from "react";
 import React from "react";
 import {isRecord} from "./record";
 
 
 type DetailsProps = {
-    name: string,
+    name: string, // name of the poll
     onBackClick: () => void,
 };
 
 type DetailsState = {
     now: number,
+    voter: string
+    option: string
     poll: Poll | undefined,
     error: string
 };
@@ -20,7 +22,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     constructor(props: DetailsProps) {
         super(props);
 
-        this.state = {now: Date.now(), poll: undefined, error: ""};
+        this.state = {now: Date.now(), voter: "", option: "", poll: undefined, error: ""};
     }
 
     componentDidMount = (): void => {
@@ -43,33 +45,49 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
         return (
             <div>
                 <h2>{poll.name}</h2>
-                <p>Winning Bid: {auction.maxBid} (by {auction.maxBidder})</p>
             </div>);
     };
 
     renderOngoing = (poll: Poll): JSX.Element => {
         const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10;
+        const optionList = []
+        for (let i = 0; i < poll.options.length; i++) {
+            optionList.push(
+                <li key={poll.options[i]}>
+                    <input
+                        type="radio"
+                        id={poll.options[i]}
+                        name="pollOption"
+                        value={poll.options[i]}
+                        checked={this.state.option === poll.options[i]}
+                        onChange={() => this.doOptionChange(poll.options[i])}
+                    />
+                    <label htmlFor={poll.options[i]}>{poll.options[i]}</label>
+                </li>
+            );
+        }
         return (
             <div>
                 <h2>{poll.name}</h2>
                 <p><i>Closes in {min} minutes...</i></p>
+                <br/>
+                <ul>{optionList}</ul>
                 <div>
-                    <label htmlFor="bidder">Name:</label>
-                    <input type="text" id="bidder" value={this.state.bidder}
-                           onChange={this.doBidderChange}></input>
+                    <label htmlFor="voter">Name:</label>
+                    <input type="text" id="voter" value={this.state.voter}
+                           onChange={this.doVoterChange}></input>
                 </div>
-                <div>
-                    <label htmlFor="amount">Amount:</label>
-                    <input type="number" min={auction.maxBid + 1}
-                           id="amount" value={this.state.amount}
-                           onChange={this.doAmountChange}></input>
-                </div>
-                <button type="button" onClick={this.doBidClick}>Bid</button>
+                <button type="button" onClick={this.doBackClick}>Back</button>
                 <button type="button" onClick={this.doRefreshClick}>Refresh</button>
-                <button type="button" onClick={this.doDoneClick}>Done</button>
+                <button type="button" onClick={this.doVoteClick}>Vote</button>
+                {this.renderNotification()}
                 {this.renderError()}
             </div>);
     };
+
+    renderNotification = (): JSX.Element => {
+        return (<div><p><i>Recorded vote of "{this.state.voter}" as "{this.state.option}"</i></p></div>)
+    }
 
     renderError = (): JSX.Element => {
         if (this.state.error.length === 0) {
@@ -114,8 +132,8 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     }
 
     // Shared helper to update the state with the new auction.
-    doAuctionChange = (data: {auction?: unknown}): void => {
-        const auction = parseAuction(data.auction);
+    doAuctionChange = (data: {poll?: unknown}): void => {
+        const poll = parsePoll(data.poll);
         if (auction !== undefined) {
             // If the current bid is too small, let's also fix that.
             const amount = parseFloat(this.state.amount);
@@ -132,5 +150,65 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
 
     doGetError = (msg: string): void => {
         console.error(`Error fetching /api/refresh: ${msg}`);
+    };
+
+    doVoteClick = (_: MouseEvent<HTMLButtonElement>): void => {
+        if (this.state.poll === undefined)
+            throw new Error("impossible");
+
+        // Verify that the user entered all required information.
+        if (this.state.voter.trim().length === 0 ||
+            this.state.option.trim().length === 0) {
+            this.setState({error: "a required field is missing."});
+            return;
+        }
+
+        const args = {name: this.props.name, voter: this.state.voter,
+            option: this.state.option};
+        fetch("/api/vote", {
+            method: "POST", body: JSON.stringify(args),
+            headers: {"Content-Type": "application/json"} })
+            .then(this.doVoteResp)
+            .catch(() => this.doVoteError("failed to connect to server"));
+    };
+
+    doVoteResp = (res: Response): void => {
+        if (res.status === 200) {
+            res.json().then(this.doVoteJson)
+                .catch(() => this.doVoteError("200 response is not JSON"));
+        } else if (res.status === 400) {
+            res.text().then(this.doVoteError)
+                .catch(() => this.doVoteError("400 response is not text"));
+        } else {
+            this.doVoteError(`bad status code from /api/vote: ${res.status}`);
+        }
+    };
+
+    doVoteJson = (data: unknown): void => {
+        if (this.state.poll === undefined)
+            throw new Error("impossible");
+
+        if (!isRecord(data)) {
+            console.error("bad data from /api/vote: not a record", data);
+            return;
+        }
+
+        this.doAuctionChange(data);
+    };
+
+    doVoteError = (msg: string): void => {
+        console.error(`Error fetching /api/vote: ${msg}`);
+    };
+
+    doBackClick = (): void => {
+        this.props.onBackClick();  // tell the parent this was clicked
+    };
+
+    doVoterChange = (evt: ChangeEvent<HTMLInputElement>): void => {
+        this.setState({voter: evt.target.value, error: ""});
+    };
+
+    doOptionChange = (option: string): void => {
+        this.setState({option: option, error: ""});
     };
 }

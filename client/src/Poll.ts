@@ -5,8 +5,18 @@ export type Poll = {
     readonly minutes: number
     readonly endTime: number,
     readonly options: string[],
-    readonly votes: Map<string, string>
-    readonly results: Map<string, number>
+    readonly votes: Vote[]
+    readonly results: Result[]
+}
+
+type Vote = {
+    voter: string,
+    option: string
+}
+
+type Result = {
+    option: string,
+    voteNum: number
 }
 
 export const parsePoll = (val: unknown): Poll | undefined => {
@@ -35,26 +45,24 @@ export const parsePoll = (val: unknown): Poll | undefined => {
         return undefined;
     }
 
-    if (!(val.votes instanceof Map)) {
-        console.error("not a poll: missing or invalid 'votes'", val)
+    if (!Array.isArray(val.votes) || !val.votes.every((vote: unknown) => {
+        return typeof vote === 'object' && vote !== null &&
+            'voter' in vote && 'option' in vote &&
+            typeof vote.voter === 'string' &&
+            typeof vote.option === 'string';
+    })) {
+        console.error("not a poll: missing or invalid 'votes'", val);
         return undefined;
-    }
-    for (let [key, value] of val.votes) {
-        if (typeof key !== 'string' || typeof value !== 'string') {
-            console.error("not a poll: invalid vote name or option 'votes'", val)
-            return undefined;
-        }
     }
 
-    if (!(val.results instanceof Map)) {
-        console.error("not a poll: missing or invalid 'results'", val)
+    if (!Array.isArray(val.results) || !val.results.every((result: unknown) => {
+        return typeof result === 'object' && result !== null &&
+            'option' in result && 'voteNum' in result &&
+            typeof result.option === 'string' &&
+            typeof result.voteNum === 'number';
+    })) {
+        console.error("not a poll: missing or invalid 'results'", val);
         return undefined;
-    }
-    for (let [key, value] of val.results) {
-        if (typeof key !== 'string' || typeof value !== 'number') {
-            console.error("not a poll: invalid vote name or option 'results'", val)
-            return undefined;
-        }
     }
 
     return {

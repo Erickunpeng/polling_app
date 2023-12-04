@@ -1,6 +1,7 @@
 import React, {Component} from "react";
 import {PollList} from "./PollList";
 import {NewPoll} from "./NewPoll";
+import {PollDetails} from "./PollDetails";
 
 type Page = "start" | "new" | {kind: "details", name: string}
 
@@ -42,11 +43,13 @@ export class PollsApp extends Component<{}, PollsAppState> {
 
     renderPollDetails = (): JSX.Element => {
         if (DEBUG) console.debug(`rendering details page for "${this.state.page}"`);
-        return (
-            <div>
-
-            </div>
-        )
+        if (typeof this.state.page === 'object' && this.state.page.kind === 'details') {
+            return <PollDetails name={this.state.page.name} onBackClick={this.doBackClick} />;
+        } else {
+            // Handle the unexpected case where 'this.state.page' is not of the expected type
+            console.error("Unexpected state for rendering poll details");
+            return <div>Error: Poll details cannot be displayed</div>;
+        }
     }
 
     renderMessage = (): JSX.Element => {
@@ -64,7 +67,7 @@ export class PollsApp extends Component<{}, PollsAppState> {
 
     doPollClick = (name: string): void => {
         if (DEBUG) console.debug(`set state to details for auction ${name}`);
-        this.setState({page: {kind: "details", name}});
+        this.setState({page: {kind: "details", name: name}});
     };
 
     doBackClick = (): void => {
