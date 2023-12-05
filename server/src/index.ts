@@ -7,7 +7,7 @@ import bodyParser from 'body-parser';
 const port: number = 8088;
 const app: Express = express();
 app.use(bodyParser.json());
-app.get("/api/get", get)
+app.post("/api/get", get)
 app.post("/api/add", add)
 app.post("/api/vote", vote)
 app.get("/api/list", list)

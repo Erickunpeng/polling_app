@@ -56,7 +56,7 @@ export const add = (req: SafeRequest, res: SafeResponse): void => {
     }
     const minutes = req.body.minutes;
     if (minutes === undefined || typeof minutes !== "number") {
-        res.status(400).send(`'minutes' is not a number: ${minutes}`);
+        res.status(400).send('required argument "minutes" was missing');
         return;
     } else if (isNaN(minutes) || minutes < 1 || Math.round(minutes) !== minutes) {
         res.status(400).send(`'minutes' is not a positive integer: ${minutes}`);
@@ -65,6 +65,9 @@ export const add = (req: SafeRequest, res: SafeResponse): void => {
     const options = req.body.options
     if (options === undefined || !Array.isArray(options) || !options.every(opt => typeof opt === 'string')) {
         res.status(400).send('required argument "options" was missing');
+        return;
+    } else if (options.length < 2) {
+        res.status(400).send(`The number of options is less than 2: ${options.length}`);
         return;
     }
     const poll: Poll = {
@@ -106,7 +109,7 @@ export const get = (req: SafeRequest, res: SafeResponse): void => {
 export const list = (_req: SafeRequest, res: SafeResponse): void => {
     const list = Array.from(polls.values())
     list.sort(comparePolls)
-    res.send({list: list})
+    res.send({polls: list})
 }
 
 /**
@@ -120,11 +123,6 @@ export const vote = (req: SafeRequest, res: SafeResponse): void => {
         res.status(400).send("missing or invalid 'voter' parameter");
         return;
     }
-    const option = req.body.option;
-    if (typeof option !== 'string') {
-        res.status(400).send("missing or invalid 'option' parameter");
-        return;
-    }
     const name = req.body.name;
     if (typeof name !== "string") {
         res.status(400).send("missing or invalid 'name' parameter");
@@ -132,12 +130,20 @@ export const vote = (req: SafeRequest, res: SafeResponse): void => {
     }
     const poll = polls.get(name);
     if (poll === undefined) {
-        res.status(400).send(`no auction with name '${name}'`);
+        res.status(400).send(`no poll with name '${name}'`);
+        return;
+    }
+    const option = req.body.option;
+    if (typeof option !== 'string') {
+        res.status(400).send("missing or invalid 'option' parameter");
+        return;
+    } else if (!poll.options.includes(option)) {
+        res.status(400).send(`This is not a option in this poll: ${option}`);
         return;
     }
     const now = Date.now();
     if (now >= poll.endTime) {
-        res.status(400).send(`auction for "${poll.name}" has already ended`);
+        res.status(400).send(`poll for "${poll.name}" has already ended`);
         return;
     }
     // Find the vote by the voter
