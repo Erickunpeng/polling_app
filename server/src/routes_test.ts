@@ -1,6 +1,6 @@
-import assert from "assert";
 import * as httpMocks from 'node-mocks-http';
 import {addPoll, advanceTimeForTesting, getPoll, listPolls, resetPollsForTesting, vote} from "./routes";
+import * as assert from 'assert';
 
 describe('routes', function () {
 
@@ -359,6 +359,7 @@ describe('routes', function () {
         assert.deepStrictEqual(res10._getData().poll.name, "couch");
         const votes1 = res10._getData().poll.votes
         let voteIndex1 = -1
+        // Inv: voteIndex1 = i if matches or -1 if not matches for each of votes1[0 .. i-1]
         for (let i = 0; i < votes1.length; i++) {
             if (votes1[i].voter === req10.body.voter) voteIndex1 = i
         }
@@ -374,6 +375,7 @@ describe('routes', function () {
         assert.deepStrictEqual(res11._getData().poll.name, "couch");
         const votes2 = res11._getData().poll.votes
         let voteIndex2 = -1
+        // Inv: voteIndex2 = i if matches or -1 if not matches for each of votes2[0 .. i-1]
         for (let i = 0; i < votes2.length; i++) {
             if (votes2[i].voter === req11.body.voter) voteIndex2 = i
         }

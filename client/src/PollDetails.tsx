@@ -15,6 +15,7 @@ type DetailsState = {
     option: string
     poll: Poll | undefined,
     error: string
+    isVoted: boolean
 };
 
 // Shows an individual poll and allows voting (if ongoing).
@@ -22,7 +23,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     constructor(props: DetailsProps) {
         super(props);
 
-        this.state = {now: Date.now(), voter: "", option: "", poll: undefined, error: ""};
+        this.state = {now: Date.now(), voter: "", option: "", poll: undefined, error: "", isVoted: false};
     }
 
     componentDidMount = (): void => {
@@ -43,21 +44,21 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
 
     renderCompleted = (poll: Poll): JSX.Element => {
         const votePercent: JSX.Element[] = []
-        const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10
+        const min = Math.round((this.state.now - poll.endTime) / 60 / 100) / 10
         const totalVotes = poll.votes.length
         for (let i = 0; i < poll.results.length; i++) {
             const result = poll.results[i]
             votePercent.push(
                 <li key={result.option}>
-                    <p><i>{Math.round(result.voteNum / totalVotes * 100)}% ---- {result.option}</i></p>
+                    <p><i>{totalVotes === 0 ? 0 : Math.round(result.voteNum / totalVotes * 100)}% ---- {result.option}</i></p>
                 </li>
             )
         }
         return (
             <div>
-                <h2>{poll.name}</h2><br/>
+                <h2>{poll.name}</h2>
                 <p><i>Closed in {min} minutes ago</i></p>
-                <ul>{votePercent}</ul><br/>
+                <ul>{votePercent}</ul>
                 <button type="button" onClick={this.doBackClick}>Back</button>
                 <button type="button" onClick={this.doRefreshClick}>Refresh</button>
             </div>);
@@ -85,7 +86,6 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             <div>
                 <h2>{poll.name}</h2>
                 <p><i>Closes in {min} minutes...</i></p>
-                <br/>
                 <ul>{optionList}</ul>
                 <div>
                     <label htmlFor="voter">Name:</label>
@@ -95,13 +95,13 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
                 <button type="button" onClick={this.doBackClick}>Back</button>
                 <button type="button" onClick={this.doRefreshClick}>Refresh</button>
                 <button type="button" onClick={this.doVoteClick}>Vote</button>
-                {this.renderNotification()}
+                {this.renderNotification(this.state.isVoted)}
                 {this.renderError()}
             </div>);
     };
 
-    renderNotification = (): JSX.Element => {
-        return (<div><p><i>Recorded vote of "{this.state.voter}" as "{this.state.option}"</i></p></div>)
+    renderNotification = (isVoted: boolean): JSX.Element => {
+        return isVoted ? (<div><p><i>Recorded vote of "{this.state.voter}" as "{this.state.option}"</i></p></div>) : (<div></div>)
     }
 
     renderError = (): JSX.Element => {
@@ -148,7 +148,8 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     doPollChange = (data: {poll?: unknown}): void => {
         const poll = parsePoll(data.poll);
         if (poll !== undefined) {
-            this.setState({poll: poll})
+            console.log(poll)
+            this.setState({poll: poll, now: Date.now()})
         } else {
             console.error("poll from /api/get did not parse", data.poll)
         }
@@ -198,7 +199,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             console.error("bad data from /api/vote: not a record", data);
             return;
         }
-
+        this.setState({isVoted: true})
         this.doPollChange(data);
     };
 

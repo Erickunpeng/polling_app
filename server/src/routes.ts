@@ -71,6 +71,7 @@ export const addPoll = (req: SafeRequest, res: SafeResponse): void => {
         return;
     }
     const results = []
+    // Inv: results[i] = {option: options[i], voteNum: 0}
     for (let i = 0; i < options.length; i++) {
         results.push({option: options[i], voteNum: 0})
     }
@@ -158,6 +159,7 @@ export const vote = (req: SafeRequest, res: SafeResponse): void => {
         const prevOption = poll.votes[voteIndex].option
         poll.votes[voteIndex].option = option;
         // Update the number of the prev option
+        // Inv: poll.results[i].voteNum -= 1 if poll.results[i].option matches the prevOption, or does not change if not matches
         for (let i = 0; i < poll.results.length; i++) {
             if (poll.results[i].option === prevOption) {
                 poll.results[i].voteNum -= 1
@@ -168,6 +170,7 @@ export const vote = (req: SafeRequest, res: SafeResponse): void => {
         poll.votes.push({ voter, option });
     }
     // Update the results
+    // Inv: poll.results[i].voteNum += 1 if poll.results[i].option matches the option, or does not change if not matches
     for (let i = 0; i < poll.results.length; i++) {
         if (poll.results[i].option === option) {
             poll.results[i].voteNum += 1

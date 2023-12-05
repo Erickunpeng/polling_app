@@ -42,7 +42,7 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
                     <textarea id="options" rows={3} value={this.state.inputOption}
                               onChange={this.doOptionsChange}></textarea>
                 </div>
-                <button type="button" onClick={this.doCreateClick}>Start</button>
+                <button type="button" onClick={this.doCreateClick}>Create</button>
                 <button type="button" onClick={this.doBackClick}>Back</button>
                 {this.renderError()}
             </div>);
@@ -94,6 +94,7 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
             this.setState({error: "There should be at least two options"});
             return;
         }
+
         // Repeated options
         let currOption = this.state.options[0]
         for (let i = 1; i < this.state.options.length; i++) {
@@ -110,7 +111,7 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
         // Ask the app to start this auction (adding it to the list).
         const args = { name: this.state.name, minutes: minutes,
             options: this.state.options };
-        fetch("/api/addPoll", {
+        fetch("/api/add", {
             method: "POST", body: JSON.stringify(args),
             headers: {"Content-Type": "application/json"} })
             .then(this.doAddResp)

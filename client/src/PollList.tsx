@@ -70,11 +70,12 @@ export class PollList extends Component<ListProps, ListState> {
             const closedPollList: JSX.Element[] = [];
             for (const poll of this.state.polls) {
                 const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10
+                const closedMin = Math.round((this.state.now - poll.endTime) / 60 / 100) / 10
                 if (min < 0) { // closed
                     closedPollList.push(
                         <li key={poll.name}>
                             <a href="#" onClick={() => this.doPollClick(poll.name)}>{poll.name}</a>
-                            <span> – Closed {Math.round(min)} minutes ago</span>
+                            <span> – Closed {Math.round(closedMin)} minutes ago</span>
                         </li>);
                 }
             }
