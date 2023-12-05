@@ -50,12 +50,12 @@ export const advanceTimeForTesting = (ms: number): void => {
  */
 export const add = (req: SafeRequest, res: SafeResponse): void => {
     const name = req.body.name;
-    if (typeof name !== 'string') {
+    if (name === undefined || typeof name !== 'string') {
         res.status(400).send('required argument "name" was missing');
         return;
     }
     const minutes = req.body.minutes;
-    if (typeof minutes !== "number") {
+    if (minutes === undefined || typeof minutes !== "number") {
         res.status(400).send(`'minutes' is not a number: ${minutes}`);
         return;
     } else if (isNaN(minutes) || minutes < 1 || Math.round(minutes) !== minutes) {
@@ -63,7 +63,7 @@ export const add = (req: SafeRequest, res: SafeResponse): void => {
         return;
     }
     const options = req.body.options
-    if (!Array.isArray(options) || !options.every(opt => typeof opt === 'string')) {
+    if (options === undefined || !Array.isArray(options) || !options.every(opt => typeof opt === 'string')) {
         res.status(400).send('required argument "options" was missing');
         return;
     }

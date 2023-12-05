@@ -45,19 +45,41 @@ export class PollList extends Component<ListProps, ListState> {
     }
 
     renderOpenedPolls = (): JSX.Element => {
-        return (
-            <div>
-
-            </div>
-        )
+        if (this.state.polls === undefined) {
+            return <p>Loading poll list...</p>;
+        } else {
+            const openedPollList: JSX.Element[] = [];
+            for (const poll of this.state.polls) {
+                const min = (poll.endTime - this.state.now) / 60 / 1000;
+                if (min > 0) { // opened
+                    openedPollList.push(
+                        <li key={poll.name}>
+                            <a href="#" onClick={(evt) => this.doPollClick(evt, poll.name)}>{poll.name}</a>
+                            <span> – {Math.round(min)} minutes remaining</span>
+                        </li>);
+                }
+            }
+            return (<ul>{openedPollList}</ul>)
+        }
     }
 
     renderClosedPolls = (): JSX.Element => {
-        return (
-            <div>
-
-            </div>
-        )
+        if (this.state.polls === undefined) {
+            return <p>Loading poll list...</p>;
+        } else {
+            const closedPollList: JSX.Element[] = [];
+            for (const poll of this.state.polls) {
+                const min = (poll.endTime - this.state.now) / 60 / 1000;
+                if (min < 0) { // closed
+                    closedPollList.push(
+                        <li key={poll.name}>
+                            <a href="#" onClick={(evt) => this.doPollClick(evt, poll.name)}>{poll.name}</a>
+                            <span> – Closed {Math.round(min)} minutes ago</span>
+                        </li>);
+                }
+            }
+            return (<ul>{closedPollList}</ul>)
+        }
     }
 
     doRefreshClick = (): void => {
@@ -78,13 +100,14 @@ export class PollList extends Component<ListProps, ListState> {
     };
 
     doListJson = (data: unknown): void => {
+        console.log("200")
         if (!isRecord(data)) {
             console.error("bad data from /api/list: not a record", data);
             return;
         }
 
         if (!Array.isArray(data.polls)) {
-            console.error("bad data from /api/list: auctions is not an array", data);
+            console.error("bad data from /api/list: polls is not an array", data);
             return;
         }
 
@@ -95,7 +118,7 @@ export class PollList extends Component<ListProps, ListState> {
                 return;
             polls.push(poll);
         }
-        this.setState({polls, now: Date.now()});  // fix time also
+        this.setState({polls: polls, now: Date.now()});  // fix time also
     };
 
     doListError = (msg: string): void => {
@@ -106,8 +129,7 @@ export class PollList extends Component<ListProps, ListState> {
         this.props.onNewClick();  // tell the parent to show the new auction page
     };
 
-    doPollClick = (evt: MouseEvent, name: string): void => {
-        evt.preventDefault();
+    doPollClick = (evt: MouseEvent<HTMLAnchorElement>, name: string): void => {
         this.props.onPollClick(name);
     };
 

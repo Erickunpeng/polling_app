@@ -11,6 +11,7 @@ type NewPollProps = {
 type NewPollState = {
     name: string,
     minutes: string,
+    inputOption: string
     options: string[]
     error: string
 }
@@ -18,7 +19,7 @@ type NewPollState = {
 export class NewPoll extends Component<NewPollProps, NewPollState> {
     constructor(props: NewPollProps) {
         super(props);
-        this.state = {name: "", minutes: "", options: [], error: ""}
+        this.state = {name: "", minutes: "", inputOption: "", options: [], error: ""}
     }
 
     render = (): JSX.Element => {
@@ -38,7 +39,7 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
                 <div>
                     <label htmlFor="options">Options (one per line, minimum 2 lines):</label>
                     <br/>
-                    <textarea id="options" rows={3} value={this.state.options}
+                    <textarea id="options" rows={3} value={this.state.inputOption}
                               onChange={this.doOptionsChange}></textarea>
                 </div>
                 <button type="button" onClick={this.doCreateClick}>Start</button>
@@ -70,7 +71,7 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
     doOptionsChange = (evt: ChangeEvent<HTMLTextAreaElement>): void => {
         const optionsText = evt.target.value;
         const options: string[] = optionsText.split('\n').filter(option => option.trim() !== '');
-        this.setState({options: options, error: ""});
+        this.setState({inputOption: optionsText, options: options, error: ""});
     };
 
     doCreateClick = (): void => {
@@ -88,6 +89,12 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
             this.setState({error: "minutes is not a positive integer"});
             return;
         }
+
+        if (this.state.options.length < 2) {
+            this.setState({error: "There should be at least two options"});
+            return;
+        }
+        console.log(this.state.options)
 
         // Ask the app to start this auction (adding it to the list).
         const args = { name: this.state.name, minutes: minutes,
