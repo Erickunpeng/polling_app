@@ -94,16 +94,12 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
             this.setState({error: "There should be at least two options"});
             return;
         }
-
         // Repeated options
-        let currOption = this.state.options[0]
-        for (let i = 1; i < this.state.options.length; i++) {
-            if (currOption === this.state.options[i]) {
-                this.setState({error: "There should not be repeated options"});
+        // Inv: return with error if this.state.options[i] = this.state.options[i + 1] for each this.state.options[0...i-2]
+        for (let i = 0; i < this.state.options.length - 1; i++) {
+            if (this.state.options[i] === this.state.options[i + 1]) {
+                this.setState({ error: "There should not be repeated options" });
                 return;
-            }
-            if (i !== this.state.options.length - 2) {
-                currOption = this.state.options[i + 1]
             }
         }
         console.log(this.state.options)

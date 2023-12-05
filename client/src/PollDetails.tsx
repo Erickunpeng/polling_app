@@ -43,9 +43,13 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     };
 
     renderCompleted = (poll: Poll): JSX.Element => {
+        const fontStyle = {
+            fontFamily: '"Times New Roman", Times, serif'
+        }
         const votePercent: JSX.Element[] = []
         const min = Math.round((this.state.now - poll.endTime) / 60 / 100) / 10
         const totalVotes = poll.votes.length
+        // Inv: votePercent = LI for each of poll.results[0 ... i-1]
         for (let i = 0; i < poll.results.length; i++) {
             const result = poll.results[i]
             votePercent.push(
@@ -55,7 +59,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             )
         }
         return (
-            <div>
+            <div style={fontStyle}>
                 <h2>{poll.name}</h2>
                 <p><i>Closed in {min} minutes ago</i></p>
                 <ul>{votePercent}</ul>
@@ -67,6 +71,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     renderOngoing = (poll: Poll): JSX.Element => {
         const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10;
         const optionList = []
+        // Inv: optionList = LI for each of poll.options[0 ... i-1]
         for (let i = 0; i < poll.options.length; i++) {
             optionList.push(
                 <li key={poll.options[i]}>

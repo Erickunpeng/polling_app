@@ -1,5 +1,7 @@
 import {isRecord} from "./record";
 
+// Description of an individual poll
+// RI: options.length, results.length >= 2
 export type Poll = {
     readonly name: string,
     readonly minutes: number
@@ -19,6 +21,12 @@ type Result = {
     voteNum: number
 }
 
+/**
+ * Parses unknown data into a Poll. Will log an error and return undefined
+ * if it is not a valid Poll.
+ * @param val unknown data to parse into a Poll
+ * @return Poll if val is a valid Poll and undefined otherwise
+ */
 export const parsePoll = (val: unknown): Poll | undefined => {
     if (!isRecord(val)) {
         console.error("not a poll", val)
@@ -49,6 +57,7 @@ export const parsePoll = (val: unknown): Poll | undefined => {
         console.error("not a poll: missing or invalid 'votes'", val);
         return undefined;
     }
+    // Inv: For each vote in val.votes[0 ... i-1], vote.voter and vote.option are of type 'string'
     for (let i = 0; i < val.votes.length; i++) {
         const vote = val.votes[i]
         if (typeof vote.voter !== "string" || typeof vote.option !== "string") {
@@ -61,6 +70,7 @@ export const parsePoll = (val: unknown): Poll | undefined => {
         console.error("not a poll: missing or invalid 'results'", val);
         return undefined;
     }
+    // Inv: For each result in val.results[0 ... i-1], result.option is of type 'string' and result.voteNum is of type 'number'
     for (let i = 0; i < val.results.length; i++) {
         const result = val.results[i]
         if (typeof result.option !== "string" || typeof result.voteNum !== "number") {
