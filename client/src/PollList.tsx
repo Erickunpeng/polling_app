@@ -50,11 +50,11 @@ export class PollList extends Component<ListProps, ListState> {
         } else {
             const openedPollList: JSX.Element[] = [];
             for (const poll of this.state.polls) {
-                const min = (poll.endTime - this.state.now) / 60 / 1000;
+                const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10
                 if (min > 0) { // opened
                     openedPollList.push(
                         <li key={poll.name}>
-                            <a href="#" onClick={(evt) => this.doPollClick(evt, poll.name)}>{poll.name}</a>
+                            <a href="#" onClick={() => this.doPollClick(poll.name)}>{poll.name}</a>
                             <span> – {Math.round(min)} minutes remaining</span>
                         </li>);
                 }
@@ -69,11 +69,11 @@ export class PollList extends Component<ListProps, ListState> {
         } else {
             const closedPollList: JSX.Element[] = [];
             for (const poll of this.state.polls) {
-                const min = (poll.endTime - this.state.now) / 60 / 1000;
+                const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10
                 if (min < 0) { // closed
                     closedPollList.push(
                         <li key={poll.name}>
-                            <a href="#" onClick={(evt) => this.doPollClick(evt, poll.name)}>{poll.name}</a>
+                            <a href="#" onClick={() => this.doPollClick(poll.name)}>{poll.name}</a>
                             <span> – Closed {Math.round(min)} minutes ago</span>
                         </li>);
                 }
@@ -129,7 +129,7 @@ export class PollList extends Component<ListProps, ListState> {
         this.props.onNewClick();  // tell the parent to show the new auction page
     };
 
-    doPollClick = (evt: MouseEvent<HTMLAnchorElement>, name: string): void => {
+    doPollClick = (name: string): void => {
         this.props.onPollClick(name);
     };
 

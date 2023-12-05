@@ -89,17 +89,28 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
             this.setState({error: "minutes is not a positive integer"});
             return;
         }
-
+        // At least two options
         if (this.state.options.length < 2) {
             this.setState({error: "There should be at least two options"});
             return;
+        }
+        // Repeated options
+        let currOption = this.state.options[0]
+        for (let i = 1; i < this.state.options.length; i++) {
+            if (currOption === this.state.options[i]) {
+                this.setState({error: "There should not be repeated options"});
+                return;
+            }
+            if (i !== this.state.options.length - 2) {
+                currOption = this.state.options[i + 1]
+            }
         }
         console.log(this.state.options)
 
         // Ask the app to start this auction (adding it to the list).
         const args = { name: this.state.name, minutes: minutes,
             options: this.state.options };
-        fetch("/api/add", {
+        fetch("/api/addPoll", {
             method: "POST", body: JSON.stringify(args),
             headers: {"Content-Type": "application/json"} })
             .then(this.doAddResp)
@@ -114,20 +125,16 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
             resp.text().then(this.doAddError)
                 .catch(() => this.doAddError("400 response is not text"));
         } else {
-            this.doAddError(`bad status code from /api/add: ${resp.status}`);
+            this.doAddError(`bad status code from /api/addPoll: ${resp.status}`);
         }
     };
 
     doAddJson = (data: unknown): void => {
         if (!isRecord(data)) {
-            console.error("bad data from /api/add: not a record", data);
+            console.error("bad data from /api/addPoll: not a record", data);
             return;
         }
-        if (typeof data.name === 'string') {
-            this.props.onCreateClick(data.name);
-        } else {
-            this.doAddError("The response did not contain a valid 'name'");
-        }
+        this.props.onBackClick();  // show the updated list
     };
 
     doAddError = (msg: string): void => {

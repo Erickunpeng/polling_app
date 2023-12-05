@@ -45,24 +45,28 @@ export const parsePoll = (val: unknown): Poll | undefined => {
         return undefined;
     }
 
-    if (!Array.isArray(val.votes) || !val.votes.every((vote: unknown) => {
-        return typeof vote === 'object' && vote !== null &&
-            'voter' in vote && 'option' in vote &&
-            typeof vote.voter === 'string' &&
-            typeof vote.option === 'string';
-    })) {
+    if (!Array.isArray(val.votes)) {
         console.error("not a poll: missing or invalid 'votes'", val);
         return undefined;
     }
+    for (let i = 0; i < val.votes.length; i++) {
+        const vote = val.votes[i]
+        if (typeof vote.voter !== "string" || typeof vote.option !== "string") {
+            console.error("not a poll: missing or invalid 'votes'", val);
+            return undefined;
+        }
+    }
 
-    if (!Array.isArray(val.results) || !val.results.every((result: unknown) => {
-        return typeof result === 'object' && result !== null &&
-            'option' in result && 'voteNum' in result &&
-            typeof result.option === 'string' &&
-            typeof result.voteNum === 'number';
-    })) {
+    if (!Array.isArray(val.results)) {
         console.error("not a poll: missing or invalid 'results'", val);
         return undefined;
+    }
+    for (let i = 0; i < val.results.length; i++) {
+        const result = val.results[i]
+        if (typeof result.option !== "string" || typeof result.voteNum !== "number") {
+            console.error("not a poll: missing or invalid 'results'", val);
+            return undefined;
+        }
     }
 
     return {

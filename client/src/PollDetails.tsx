@@ -31,7 +31,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
 
     render = (): JSX.Element => {
         if (this.state.poll === undefined) {
-            return <p>Loading auction "{this.props.name}"...</p>
+            return <p>Loading poll "{this.props.name}"...</p>
         } else {
             if (this.state.poll.endTime <= this.state.now) {
                 return this.renderCompleted(this.state.poll);
@@ -42,9 +42,24 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     };
 
     renderCompleted = (poll: Poll): JSX.Element => {
+        const votePercent: JSX.Element[] = []
+        const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10
+        const totalVotes = poll.votes.length
+        for (let i = 0; i < poll.results.length; i++) {
+            const result = poll.results[i]
+            votePercent.push(
+                <li key={result.option}>
+                    <p><i>{Math.round(result.voteNum / totalVotes * 100)}% ---- {result.option}</i></p>
+                </li>
+            )
+        }
         return (
             <div>
-                <h2>{poll.name}</h2>
+                <h2>{poll.name}</h2><br/>
+                <p><i>Closed in {min} minutes ago</i></p>
+                <ul>{votePercent}</ul><br/>
+                <button type="button" onClick={this.doBackClick}>Back</button>
+                <button type="button" onClick={this.doRefreshClick}>Refresh</button>
             </div>);
     };
 
@@ -102,10 +117,8 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     };
 
     doRefreshClick = (): void => {
-        const args = {name: this.props.name};
-        fetch("/api/get", {
-            method: "POST", body: JSON.stringify(args),
-            headers: {"Content-Type": "application/json"} })
+        console.log(this.props.name)
+        fetch(`/api/getPoll?name=${encodeURIComponent(this.props.name)}`)
             .then(this.doGetResp)
             .catch(() => this.doGetError("failed to connect to server"));
     };
@@ -118,41 +131,34 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             res.text().then(this.doGetError)
                 .catch(() => this.doGetError("400 response is not text"));
         } else {
-            this.doGetError(`bad status code from /api/refersh: ${res.status}`);
+            this.doGetError(`bad status code from /api/getPoll: ${res.status}`);
         }
     };
 
     doGetJson = (data: unknown): void => {
         if (!isRecord(data)) {
-            console.error("bad data from /api/refresh: not a record", data);
+            console.error("bad data from /api/getPoll: not a record", data);
             return;
         }
 
-        this.doAuctionChange(data);
+        this.doPollChange(data);
     }
 
     // Shared helper to update the state with the new auction.
-    doAuctionChange = (data: {poll?: unknown}): void => {
+    doPollChange = (data: {poll?: unknown}): void => {
         const poll = parsePoll(data.poll);
-        if (auction !== undefined) {
-            // If the current bid is too small, let's also fix that.
-            const amount = parseFloat(this.state.amount);
-            if (isNaN(amount) || amount < auction.maxBid + 1) {
-                this.setState({auction, now: Date.now(), error: "",
-                    amount: '' + (auction.maxBid + 1)});
-            } else {
-                this.setState({auction, now: Date.now(), error: ""});
-            }
+        if (poll !== undefined) {
+            this.setState({poll: poll})
         } else {
-            console.error("auction from /api/fresh did not parse", data.auction)
+            console.error("poll from /api/getPoll did not parse", data.poll)
         }
     };
 
     doGetError = (msg: string): void => {
-        console.error(`Error fetching /api/refresh: ${msg}`);
+        console.error(`Error fetching /api/getPoll: ${msg}`);
     };
 
-    doVoteClick = (_: MouseEvent<HTMLButtonElement>): void => {
+    doVoteClick = (): void => {
         if (this.state.poll === undefined)
             throw new Error("impossible");
 
@@ -193,7 +199,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             return;
         }
 
-        this.doAuctionChange(data);
+        this.doPollChange(data);
     };
 
     doVoteError = (msg: string): void => {
