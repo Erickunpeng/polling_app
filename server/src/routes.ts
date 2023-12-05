@@ -93,6 +93,7 @@ export const addPoll = (req: SafeRequest, res: SafeResponse): void => {
  */
 export const getPoll = (req: SafeRequest, res: SafeResponse): void => {
     const name = first(req.query.name);
+    console.log(req.query)
     if (name === undefined) {
         res.status(400).send("missing or invalid 'name' parameter");
         return;
@@ -110,7 +111,7 @@ export const getPoll = (req: SafeRequest, res: SafeResponse): void => {
  * @param _req The HTTP request object.
  * @param res The HTTP request object.
  */
-export const list = (_req: SafeRequest, res: SafeResponse): void => {
+export const listPolls = (_req: SafeRequest, res: SafeResponse): void => {
     const list = Array.from(polls.values())
     list.sort(comparePolls)
     res.send({polls: list})
@@ -177,7 +178,6 @@ export const vote = (req: SafeRequest, res: SafeResponse): void => {
 
 /** Used in tests to set the transcripts map back to empty. */
 export const resetPollsForTesting = (): void => {
-    // (6a): remove all saved transcripts from the map
     polls.clear()
 };
 

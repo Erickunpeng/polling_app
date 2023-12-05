@@ -118,7 +118,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
 
     doRefreshClick = (): void => {
         console.log(this.props.name)
-        fetch(`/api/getPoll?name=${encodeURIComponent(this.props.name)}`)
+        fetch(`/api/get?name=${encodeURIComponent(this.props.name)}`)
             .then(this.doGetResp)
             .catch(() => this.doGetError("failed to connect to server"));
     };
@@ -131,13 +131,13 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             res.text().then(this.doGetError)
                 .catch(() => this.doGetError("400 response is not text"));
         } else {
-            this.doGetError(`bad status code from /api/getPoll: ${res.status}`);
+            this.doGetError(`bad status code from /api/get: ${res.status}`);
         }
     };
 
     doGetJson = (data: unknown): void => {
         if (!isRecord(data)) {
-            console.error("bad data from /api/getPoll: not a record", data);
+            console.error("bad data from /api/get: not a record", data);
             return;
         }
 
@@ -150,12 +150,12 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
         if (poll !== undefined) {
             this.setState({poll: poll})
         } else {
-            console.error("poll from /api/getPoll did not parse", data.poll)
+            console.error("poll from /api/get did not parse", data.poll)
         }
     };
 
     doGetError = (msg: string): void => {
-        console.error(`Error fetching /api/getPoll: ${msg}`);
+        console.error(`Error fetching /api/get: ${msg}`);
     };
 
     doVoteClick = (): void => {
