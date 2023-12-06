@@ -112,7 +112,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
                 <p>Closes in {minutes} minutes {seconds} seconds...</p>
                 <ul>{optionList}</ul>
                 <div>
-                    <label htmlFor="voter">Name: </label>
+                    <label htmlFor="voter">Vote Name: </label>
                     <input type="text" id="voter" value={this.state.voter}
                            onChange={this.doVoterChange}></input>
                 </div><br/>
