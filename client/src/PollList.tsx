@@ -28,17 +28,22 @@ export class PollList extends Component<ListProps, ListState> {
         if (prevProps !== this.props) {
             this.setState({now: Date.now()});  // Force a refresh
         }
+        this.doRefreshClick()
     };
 
     render = (): JSX.Element => {
+        const fontStyle = {
+            fontFamily: '"Times New Roman", Times, serif'
+        }
         return (
-            <div>
+            <div style={fontStyle}>
                 <h2>Current Polls</h2>
                 <h3>Still Open</h3>
                 {this.renderOpenedPolls()}
                 <h3>Closed</h3>
                 {this.renderClosedPolls()}
                 <button type="button" onClick={this.doRefreshClick}>Refresh</button>
+                <span>  </span>
                 <button type="button" onClick={this.doNewClick}>New Poll</button>
             </div>
         )
@@ -51,11 +56,17 @@ export class PollList extends Component<ListProps, ListState> {
             const openedPollList: JSX.Element[] = [];
             for (const poll of this.state.polls) {
                 const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10
+                // Calculate remaining time in seconds
+                const remainingSeconds = Math.round((poll.endTime - this.state.now) / 1000);
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60; // Get the remainder of seconds after dividing by 60
                 if (min > 0) { // opened
                     openedPollList.push(
                         <li key={poll.name}>
                             <a href="#" onClick={() => this.doPollClick(poll.name)}>{poll.name}</a>
-                            <span> – {Math.round(min)} minutes remaining</span>
+                            <span> – {minutes} minutes {seconds} seconds remaining</span>
+                            <span>  --  </span>
+                            <button onClick={() => this.doDeleteClick(poll.name)}>Delete</button>
                         </li>);
                 }
             }
@@ -70,12 +81,17 @@ export class PollList extends Component<ListProps, ListState> {
             const closedPollList: JSX.Element[] = [];
             for (const poll of this.state.polls) {
                 const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10
-                const closedMin = Math.round((this.state.now - poll.endTime) / 60 / 100) / 10
+                // Calculate the total seconds between the current time and the poll's end time
+                const totalSeconds = Math.round((this.state.now - poll.endTime) / 1000);
+                const minutes = Math.floor(Math.abs(totalSeconds) / 60); // Get the whole minutes
+                const seconds = Math.abs(totalSeconds) % 60; // Get the remaining seconds
                 if (min < 0) { // closed
                     closedPollList.push(
                         <li key={poll.name}>
                             <a href="#" onClick={() => this.doPollClick(poll.name)}>{poll.name}</a>
-                            <span> – Closed {Math.round(closedMin)} minutes ago</span>
+                            <span> – Closed in {minutes} minutes {seconds} seconds ago</span>
+                            <span>  --  </span>
+                            <button onClick={() => this.doDeleteClick(poll.name)}>Delete</button>
                         </li>);
                 }
             }
@@ -101,7 +117,7 @@ export class PollList extends Component<ListProps, ListState> {
     };
 
     doListJson = (data: unknown): void => {
-        console.log("200")
+        // console.log("200")
         if (!isRecord(data)) {
             console.error("bad data from /api/list: not a record", data);
             return;
@@ -134,4 +150,36 @@ export class PollList extends Component<ListProps, ListState> {
         this.props.onPollClick(name);
     };
 
+    doDeleteClick = (name: string): void => {
+        const args = { name: name };
+        fetch("/api/delete", {
+            method: "POST", body: JSON.stringify(args),
+            headers: {"Content-Type": "application/json"} })
+            .then(this.doDeleteResp)
+            .catch(() => this.doDeleteError("failed to connect to server"));
+    }
+
+    doDeleteResp = (resp: Response): void => {
+        if (resp.status === 200) {
+            resp.json().then(this.doDeleteJson)
+                .catch(() => this.doDeleteError("200 response is not JSON"));
+        } else if (resp.status === 400) {
+            resp.text().then(this.doDeleteError)
+                .catch(() => this.doDeleteError("400 response is not text"));
+        } else {
+            this.doDeleteError(`bad status code from /api/delete: ${resp.status}`);
+        }
+    };
+
+    doDeleteJson = (data: unknown): void => {
+        if (!isRecord(data)) {
+            console.error("bad data from /api/delete: not a record", data);
+            return;
+        }
+        console.log(`The poll is successfully deleted: ${data.name}`)
+    };
+
+    doDeleteError = (msg: string): void => {
+        console.error(`Error fetching /api/delete: ${msg}`);
+    };
 }

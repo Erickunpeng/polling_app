@@ -15,7 +15,7 @@ type DetailsState = {
     option: string
     poll: Poll | undefined,
     error: string
-    isVoted: boolean
+    notification: string
 };
 
 // Shows an individual poll and allows voting (if ongoing).
@@ -23,16 +23,26 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     constructor(props: DetailsProps) {
         super(props);
 
-        this.state = {now: Date.now(), voter: "", option: "", poll: undefined, error: "", isVoted: false};
+        this.state = {now: Date.now(), voter: "", option: "", poll: undefined, error: "", notification: ""};
     }
 
     componentDidMount = (): void => {
         this.doRefreshClick();
     };
 
+    componentDidUpdate = (prevProps: DetailsProps): void => {
+        if (prevProps !== this.props) {
+            this.setState({now: Date.now()});  // Force a refresh
+        }
+        this.doRefreshClick()
+    };
+
     render = (): JSX.Element => {
+        const fontStyle = {
+            fontFamily: '"Times New Roman", Times, serif'
+        }
         if (this.state.poll === undefined) {
-            return <p>Loading poll "{this.props.name}"...</p>
+            return <p style={fontStyle}>Loading poll "{this.props.name}"...</p>
         } else {
             if (this.state.poll.endTime <= this.state.now) {
                 return this.renderCompleted(this.state.poll);
@@ -47,21 +57,24 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             fontFamily: '"Times New Roman", Times, serif'
         }
         const votePercent: JSX.Element[] = []
-        const min = Math.round((this.state.now - poll.endTime) / 60 / 100) / 10
+        // Calculate the total seconds between the current time and the poll's end time
+        const totalSeconds = Math.round((this.state.now - poll.endTime) / 1000);
+        const minutes = Math.floor(Math.abs(totalSeconds) / 60); // Get the whole minutes
+        const seconds = Math.abs(totalSeconds) % 60; // Get the remaining seconds
         const totalVotes = poll.votes.length
         // Inv: votePercent = LI for each of poll.results[0 ... i-1]
         for (let i = 0; i < poll.results.length; i++) {
             const result = poll.results[i]
             votePercent.push(
                 <li key={result.option}>
-                    <p><i>{totalVotes === 0 ? 0 : Math.round(result.voteNum / totalVotes * 100)}% ---- {result.option}</i></p>
+                    <p>{totalVotes === 0 ? 0 : Math.round(result.voteNum / totalVotes * 100)}% ---- {result.option}</p>
                 </li>
             )
         }
         return (
             <div style={fontStyle}>
                 <h2>{poll.name}</h2>
-                <p><i>Closed in {min} minutes ago</i></p>
+                <p>Closed in {minutes} minutes {seconds} seconds ago</p>
                 <ul>{votePercent}</ul>
                 <button type="button" onClick={this.doBackClick}>Back</button>
                 <button type="button" onClick={this.doRefreshClick}>Refresh</button>
@@ -69,7 +82,13 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     };
 
     renderOngoing = (poll: Poll): JSX.Element => {
-        const min = Math.round((poll.endTime - this.state.now) / 60 / 100) / 10;
+        const fontStyle = {
+            fontFamily: '"Times New Roman", Times, serif'
+        }
+        // Calculate remaining time in seconds
+        const remainingSeconds = Math.round((poll.endTime - this.state.now) / 1000);
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60; // Get the remainder of seconds after dividing by 60
         const optionList = []
         // Inv: optionList = LI for each of poll.options[0 ... i-1]
         for (let i = 0; i < poll.options.length; i++) {
@@ -88,25 +107,27 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             );
         }
         return (
-            <div>
+            <div style={fontStyle}>
                 <h2>{poll.name}</h2>
-                <p><i>Closes in {min} minutes...</i></p>
+                <p>Closes in {minutes} minutes {seconds} seconds...</p>
                 <ul>{optionList}</ul>
                 <div>
-                    <label htmlFor="voter">Name:</label>
+                    <label htmlFor="voter">Name: </label>
                     <input type="text" id="voter" value={this.state.voter}
                            onChange={this.doVoterChange}></input>
-                </div>
+                </div><br/>
                 <button type="button" onClick={this.doBackClick}>Back</button>
+                <span>  </span>
                 <button type="button" onClick={this.doRefreshClick}>Refresh</button>
+                <span>  </span>
                 <button type="button" onClick={this.doVoteClick}>Vote</button>
-                {this.renderNotification(this.state.isVoted)}
+                {this.renderNotification()}
                 {this.renderError()}
             </div>);
     };
 
-    renderNotification = (isVoted: boolean): JSX.Element => {
-        return isVoted ? (<div><p><i>Recorded vote of "{this.state.voter}" as "{this.state.option}"</i></p></div>) : (<div></div>)
+    renderNotification = (): JSX.Element => {
+        return (<div><p>{this.state.notification}</p></div>)
     }
 
     renderError = (): JSX.Element => {
@@ -122,7 +143,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     };
 
     doRefreshClick = (): void => {
-        console.log(this.props.name)
+        // console.log(this.props.name)
         fetch(`/api/get?name=${encodeURIComponent(this.props.name)}`)
             .then(this.doGetResp)
             .catch(() => this.doGetError("failed to connect to server"));
@@ -153,7 +174,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
     doPollChange = (data: {poll?: unknown}): void => {
         const poll = parsePoll(data.poll);
         if (poll !== undefined) {
-            console.log(poll)
+            // console.log(poll)
             this.setState({poll: poll, now: Date.now()})
         } else {
             console.error("poll from /api/get did not parse", data.poll)
@@ -204,7 +225,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
             console.error("bad data from /api/vote: not a record", data);
             return;
         }
-        this.setState({isVoted: true})
+        this.setState({notification: `Recorded vote of "${this.state.voter}" as "${this.state.option}"`})
         this.doPollChange(data);
     };
 

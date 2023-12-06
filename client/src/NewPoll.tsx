@@ -23,26 +23,30 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
     }
 
     render = (): JSX.Element => {
+        const fontStyle = {
+            fontFamily: '"Times New Roman", Times, serif'
+        }
         return (
-            <div>
+            <div style={fontStyle}>
                 <h2>New Poll</h2>
                 <div>
-                    <label htmlFor="name">Name:</label>
+                    <label htmlFor="name">Name:  </label>
                     <input id="name" type="text" value={this.state.name}
                            onChange={this.doNameChange}></input>
-                </div>
+                </div><br/>
                 <div>
-                    <label htmlFor="minutes">Minutes:</label>
+                    <label htmlFor="minutes">Minutes:  </label>
                     <input id="minutes" type="number" min="1" value={this.state.minutes}
                            onChange={this.doMinutesChange}></input>
-                </div>
+                </div><br/>
                 <div>
                     <label htmlFor="options">Options (one per line, minimum 2 lines):</label>
                     <br/>
-                    <textarea id="options" rows={3} value={this.state.inputOption}
+                    <textarea id="options" rows={5} value={this.state.inputOption}
                               onChange={this.doOptionsChange}></textarea>
-                </div>
+                </div><br/>
                 <button type="button" onClick={this.doCreateClick}>Create</button>
+                <span>  </span>
                 <button type="button" onClick={this.doBackClick}>Back</button>
                 {this.renderError()}
             </div>);
@@ -122,13 +126,13 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
             resp.text().then(this.doAddError)
                 .catch(() => this.doAddError("400 response is not text"));
         } else {
-            this.doAddError(`bad status code from /api/addPoll: ${resp.status}`);
+            this.doAddError(`bad status code from /api/add: ${resp.status}`);
         }
     };
 
     doAddJson = (data: unknown): void => {
         if (!isRecord(data)) {
-            console.error("bad data from /api/addPoll: not a record", data);
+            console.error("bad data from /api/add: not a record", data);
             return;
         }
         this.props.onBackClick();  // show the updated list

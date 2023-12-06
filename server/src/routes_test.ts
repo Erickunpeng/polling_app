@@ -1,5 +1,5 @@
 import * as httpMocks from 'node-mocks-http';
-import {addPoll, advanceTimeForTesting, getPoll, listPolls, resetPollsForTesting, vote} from "./routes";
+import {addPoll, advanceTimeForTesting, deletePoll, getPoll, listPolls, resetPollsForTesting, votePoll} from "./routes";
 import * as assert from 'assert';
 
 describe('routes', function () {
@@ -273,7 +273,7 @@ describe('routes', function () {
         resetPollsForTesting();
     });
 
-    it('vote', function () {
+    it('votePoll', function () {
         const req1 = httpMocks.createRequest(
             {method: 'POST', url: '/api/add',
                 body: {name: "couch", minutes: 5, options: ["eric1", "eric2", "eric3"]}});
@@ -289,7 +289,7 @@ describe('routes', function () {
         const req2 = httpMocks.createRequest(
             {method: 'POST', url: '/api/vote', body: {}});
         const res2 = httpMocks.createResponse();
-        vote(req2, res2);
+        votePoll(req2, res2);
         assert.strictEqual(res2._getStatusCode(), 400);
         assert.deepStrictEqual(res2._getData(),
             "missing or invalid 'voter' parameter");
@@ -298,7 +298,7 @@ describe('routes', function () {
         const req3 = httpMocks.createRequest(
             {method: 'POST', url: '/api/vote', body: {voter: "Barney"}});
         const res3 = httpMocks.createResponse();
-        vote(req3, res3);
+        votePoll(req3, res3);
         assert.strictEqual(res3._getStatusCode(), 400);
         assert.deepStrictEqual(res3._getData(),
             "missing or invalid 'name' parameter");
@@ -308,7 +308,7 @@ describe('routes', function () {
             {method: 'POST', url: '/api/vote',
                 body: {voter: "Barney", name: "chair"}});
         const res4 = httpMocks.createResponse();
-        vote(req4, res4);
+        votePoll(req4, res4);
         assert.strictEqual(res4._getStatusCode(), 400);
         assert.deepStrictEqual(res4._getData(), `no poll with name '${req4.body.name}'`);
 
@@ -316,7 +316,7 @@ describe('routes', function () {
             {method: 'POST', url: '/api/vote',
                 body: {voter: "Barney", name: "stool"}});
         const res5 = httpMocks.createResponse();
-        vote(req5, res5);
+        votePoll(req5, res5);
         assert.strictEqual(res5._getStatusCode(), 400);
         assert.deepStrictEqual(res5._getData(), `no poll with name '${req5.body.name}'`);
 
@@ -325,7 +325,7 @@ describe('routes', function () {
             {method: 'POST', url: '/api/vote',
                 body: {voter: "Barney", name: "couch"}});
         const res6 = httpMocks.createResponse();
-        vote(req6, res6);
+        votePoll(req6, res6);
         assert.strictEqual(res6._getStatusCode(), 400);
         assert.deepStrictEqual(res6._getData(),
             "missing or invalid 'option' parameter");
@@ -335,7 +335,7 @@ describe('routes', function () {
             {method: 'POST', url: '/api/vote',
                 body: {voter: "Barney", name: "couch", option: "eric4"}});
         const res7 = httpMocks.createResponse();
-        vote(req7, res7);
+        votePoll(req7, res7);
         assert.strictEqual(res7._getStatusCode(), 400);
         assert.deepStrictEqual(res7._getData(),
             `This is not a option in this poll: ${req7.body.option}`);
@@ -344,7 +344,7 @@ describe('routes', function () {
             {method: 'POST', url: '/api/vote',
                 body: {voter: "Barney", name: "couch", option: "eric5"}});
         const res8 = httpMocks.createResponse();
-        vote(req8, res8);
+        votePoll(req8, res8);
         assert.strictEqual(res8._getStatusCode(), 400);
         assert.deepStrictEqual(res8._getData(),
             `This is not a option in this poll: ${req8.body.option}`);
@@ -354,7 +354,7 @@ describe('routes', function () {
             {method: 'POST', url: '/api/vote',
                 body: {voter: "Barney", name: "couch", option: "eric1"}});
         const res10 = httpMocks.createResponse();
-        vote(req10, res10);
+        votePoll(req10, res10);
         assert.strictEqual(res10._getStatusCode(), 200);
         assert.deepStrictEqual(res10._getData().poll.name, "couch");
         const votes1 = res10._getData().poll.votes
@@ -370,7 +370,7 @@ describe('routes', function () {
             {method: 'POST', url: '/api/vote',
                 body: {voter: "Fred", name: "couch", option: "eric2"}});
         const res11 = httpMocks.createResponse();
-        vote(req11, res11);
+        votePoll(req11, res11);
         assert.strictEqual(res11._getStatusCode(), 200);
         assert.deepStrictEqual(res11._getData().poll.name, "couch");
         const votes2 = res11._getData().poll.votes
@@ -390,11 +390,90 @@ describe('routes', function () {
             {method: 'POST', url: '/api/vote',
                 body: {voter: "Barney", name: "couch", option: "eric1"}});
         const res12 = httpMocks.createResponse();
-        vote(req12, res12);
+        votePoll(req12, res12);
         assert.strictEqual(res12._getStatusCode(), 400);
         assert.deepStrictEqual(res12._getData(),
             `poll for "${req12.body.name}" has already ended`);
 
         resetPollsForTesting();
     });
+
+    it('deletePoll', function () {
+        const req1 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/add',
+                body: {name: "couch", minutes: 5, options: ["eric1", "eric2", "eric3"]}});
+        const res1 = httpMocks.createResponse();
+        addPoll(req1, res1);
+        assert.strictEqual(res1._getStatusCode(), 200);
+        assert.deepStrictEqual(res1._getData().poll.name, "couch");
+        assert.deepStrictEqual(res1._getData().poll.minutes, 5);
+        assert.deepStrictEqual(res1._getData().poll.options, ["eric1", "eric2", "eric3"]);
+
+        // 1. Missing name
+        const req2 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/delete', body: {}});
+        const res2 = httpMocks.createResponse();
+        deletePoll(req2, res2);
+        assert.strictEqual(res2._getStatusCode(), 400);
+        assert.deepStrictEqual(res2._getData(),
+            "missing or invalid 'name' parameter");
+
+        // 2. Invalid name
+        const req3 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/delete',
+                body: {name: "eric1"}});
+        const res3 = httpMocks.createResponse();
+        deletePoll(req3, res3);
+        assert.strictEqual(res3._getStatusCode(), 400);
+        assert.deepStrictEqual(res3._getData(), `no poll with name '${req3.body.name}'`);
+
+        const req4 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/delete',
+                body: {name: "stool"}});
+        const res4 = httpMocks.createResponse();
+        deletePoll(req4, res4);
+        assert.strictEqual(res4._getStatusCode(), 400);
+        assert.deepStrictEqual(res4._getData(), `no poll with name '${req4.body.name}'`);
+
+        // Successfully deleted
+        const req5 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/add',
+                body: {name: "chair", minutes: 5, options: ["eric4", "eric5", "eric6"]}});
+        const res5 = httpMocks.createResponse();
+        addPoll(req5, res5);
+        assert.strictEqual(res5._getStatusCode(), 200);
+        assert.deepStrictEqual(res5._getData().poll.name, "chair");
+        assert.deepStrictEqual(res5._getData().poll.minutes, 5);
+        assert.deepStrictEqual(res5._getData().poll.options, ["eric4", "eric5", "eric6"]);
+
+        const req6 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/delete',
+                body: {name: "couch"}});
+        const res6 = httpMocks.createResponse();
+        deletePoll(req6, res6);
+        assert.strictEqual(res6._getStatusCode(), 200);
+        assert.deepStrictEqual(res6._getData().name, "couch");
+
+        const req7 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/delete',
+                body: {name: "chair"}});
+        const res7 = httpMocks.createResponse();
+        deletePoll(req7, res7);
+        assert.strictEqual(res7._getStatusCode(), 200);
+        assert.deepStrictEqual(res7._getData().name, "chair");
+
+        const req8 = httpMocks.createRequest(
+            {method: 'GET', url: '/api/get', query: { name: "couch" }});
+        const res8 = httpMocks.createResponse();
+        getPoll(req8, res8);
+        assert.strictEqual(res8._getStatusCode(), 400);
+        assert.deepStrictEqual(res8._getData(), `no poll with name '${req8.query.name}'`);
+
+        const req9 = httpMocks.createRequest(
+            {method: 'GET', url: '/api/get', query: { name: "chair" }});
+        const res9 = httpMocks.createResponse();
+        getPoll(req9, res9);
+        assert.strictEqual(res9._getStatusCode(), 400);
+        assert.deepStrictEqual(res9._getData(), `no poll with name '${req9.query.name}'`);
+    })
 });

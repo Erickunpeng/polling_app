@@ -44,7 +44,7 @@ export const advanceTimeForTesting = (ms: number): void => {
 
 
 /**
- * Handles request for /api/add by storing the given file.
+ * Handles request for /api/add by storing the given poll.
  * @param req The HTTP request object.
  * @param res The HTTP response object.
  */
@@ -88,7 +88,7 @@ export const addPoll = (req: SafeRequest, res: SafeResponse): void => {
 }
 
 /**
- * Handles request for /api/get by returning the file requested.
+ * Handles request for /api/get by returning the poll requested.
  * @param req The HTTP request object.
  * @param res The HTTP response object.
  */
@@ -108,7 +108,7 @@ export const getPoll = (req: SafeRequest, res: SafeResponse): void => {
 }
 
 /**
- * Handles request for /api/vote by adding the vote of the voter.
+ * Handles request for /api/list by listing all saved polls.
  * @param _req The HTTP request object.
  * @param res The HTTP request object.
  */
@@ -119,11 +119,11 @@ export const listPolls = (_req: SafeRequest, res: SafeResponse): void => {
 }
 
 /**
- * Handles request for /api/list by listing all saved files.
+ * Handles request for /api/vote by adding the vote of the voter.
  * @param req The HTTP request object.
  * @param res The HTTP request object.
  */
-export const vote = (req: SafeRequest, res: SafeResponse): void => {
+export const votePoll = (req: SafeRequest, res: SafeResponse): void => {
     const voter = req.body.voter;
     if (typeof voter !== 'string') {
         res.status(400).send("missing or invalid 'voter' parameter");
@@ -177,6 +177,26 @@ export const vote = (req: SafeRequest, res: SafeResponse): void => {
         }
     }
     res.send({poll: poll})
+}
+
+/**
+ * Handles request for /api/delete by deleting the poll requested.
+ * @param req The HTTP request object.
+ * @param res The HTTP request object.
+ */
+export const deletePoll = (req: SafeRequest, res: SafeResponse): void => {
+    const name = req.body.name
+    if (typeof name !== 'string') {
+        res.status(400).send("missing or invalid 'name' parameter");
+        return;
+    }
+    const poll = polls.get(name)
+    if (poll === undefined) {
+        res.status(400).send(`no poll with name '${name}'`);
+        return;
+    }
+    polls.delete(name)
+    res.send({name: name})
 }
 
 /** Used in tests to set the transcripts map back to empty. */
