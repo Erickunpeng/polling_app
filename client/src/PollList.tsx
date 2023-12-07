@@ -7,6 +7,7 @@ import {isRecord} from "./record";
 type ListProps = {
     onNewClick: () => void,
     onPollClick: (name: string) => void
+    savePolls: (names: string[]) => void
 }
 
 type ListState = {
@@ -28,7 +29,7 @@ export class PollList extends Component<ListProps, ListState> {
         if (prevProps !== this.props) {
             this.setState({now: Date.now()});  // Force a refresh
         }
-        this.doRefreshClick()
+        // this.doRefreshClick()
     };
 
     render = (): JSX.Element => {
@@ -123,7 +124,7 @@ export class PollList extends Component<ListProps, ListState> {
             return;
         }
 
-        if (!Array.isArray(data.polls)) {
+        if (!Array.isArray(data.polls) || !Array.isArray(data.names)) {
             console.error("bad data from /api/list: polls is not an array", data);
             return;
         }
@@ -136,6 +137,7 @@ export class PollList extends Component<ListProps, ListState> {
             polls.push(poll);
         }
         this.setState({polls: polls, now: Date.now()});  // fix time also
+        this.props.savePolls(data.names)
     };
 
     doListError = (msg: string): void => {
@@ -176,6 +178,7 @@ export class PollList extends Component<ListProps, ListState> {
             console.error("bad data from /api/delete: not a record", data);
             return;
         }
+        this.doRefreshClick()
         console.log(`The poll is successfully deleted: ${data.name}`)
     };
 

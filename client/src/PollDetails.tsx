@@ -30,12 +30,12 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
         this.doRefreshClick();
     };
 
-    componentDidUpdate = (prevProps: DetailsProps): void => {
-        if (prevProps !== this.props) {
-            this.setState({now: Date.now()});  // Force a refresh
-        }
-        this.doRefreshClick()
-    };
+    // componentDidUpdate = (prevProps: DetailsProps): void => {
+    //     if (prevProps !== this.props) {
+    //         this.setState({now: Date.now()});  // Force a refresh
+    //     }
+    //     this.doRefreshClick()
+    // };
 
     render = (): JSX.Element => {
         const fontStyle = {
@@ -170,7 +170,7 @@ export class PollDetails extends Component<DetailsProps, DetailsState> {
         this.doPollChange(data);
     }
 
-    // Shared helper to update the state with the new auction.
+    // Shared helper to update the state with the new polls.
     doPollChange = (data: {poll?: unknown}): void => {
         const poll = parsePoll(data.poll);
         if (poll !== undefined) {

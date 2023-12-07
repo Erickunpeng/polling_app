@@ -54,6 +54,11 @@ export const addPoll = (req: SafeRequest, res: SafeResponse): void => {
         res.status(400).send('required argument "name" was missing');
         return;
     }
+    const findPollWithName = polls.get(name)
+    if (findPollWithName !== undefined) {
+        res.status(400).send(`The provided "${name}" name has already been used`);
+        return;
+    }
     const minutes = req.body.minutes;
     if (minutes === undefined || typeof minutes !== "number") {
         res.status(400).send('required argument "minutes" was missing');
@@ -94,7 +99,6 @@ export const addPoll = (req: SafeRequest, res: SafeResponse): void => {
  */
 export const getPoll = (req: SafeRequest, res: SafeResponse): void => {
     const name = first(req.query.name);
-    console.log(req.query)
     if (name === undefined) {
         res.status(400).send("missing or invalid 'name' parameter");
         return;
@@ -113,9 +117,10 @@ export const getPoll = (req: SafeRequest, res: SafeResponse): void => {
  * @param res The HTTP request object.
  */
 export const listPolls = (_req: SafeRequest, res: SafeResponse): void => {
+    const names = Array.from(polls.keys())
     const list = Array.from(polls.values())
     list.sort(comparePolls)
-    res.send({polls: list})
+    res.send({names: names, polls: list})
 }
 
 /**

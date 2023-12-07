@@ -9,7 +9,7 @@ const DEBUG: boolean = false;
 
 type PollsAppState = {
     page: Page;  // The page state of the App
-    msg: string;   // essage sent from server
+    pollNames: string[]
 }
 
 
@@ -18,7 +18,7 @@ export class PollsApp extends Component<{}, PollsAppState> {
 
     constructor(props: {}) {
         super(props);
-        this.state = {page: "start", msg: ""};
+        this.state = {page: "start", pollNames: []};
     }
 
     render = (): JSX.Element => {
@@ -33,12 +33,12 @@ export class PollsApp extends Component<{}, PollsAppState> {
 
     renderStartScreen = (): JSX.Element => {
         if (DEBUG) console.debug("rendering list page");
-        return <PollList onNewClick={this.doNewClick} onPollClick={this.doPollClick}/>;
+        return <PollList onNewClick={this.doNewClick} onPollClick={this.doPollClick} savePolls={this.doSaveChange}/>;
     }
 
     renderNewPoll = (): JSX.Element => {
         if (DEBUG) console.debug("rendering add page");
-        return <NewPoll onBackClick={this.doBackClick} onCreateClick={this.doPollClick}/>;
+        return <NewPoll onBackClick={this.doBackClick} onCreateClick={this.doPollClick} pollNames={this.state.pollNames}/>;
     }
 
     renderPollDetails = (): JSX.Element => {
@@ -51,14 +51,6 @@ export class PollsApp extends Component<{}, PollsAppState> {
             return <div>Error: Poll details cannot be displayed</div>;
         }
     }
-
-    renderMessage = (): JSX.Element => {
-        if (this.state.msg === "") {
-            return <div></div>;
-        } else {
-            return <p>Server says: {this.state.msg}</p>;
-        }
-    };
 
     doNewClick = (): void => {
         if (DEBUG) console.debug("set state to new");
@@ -74,4 +66,8 @@ export class PollsApp extends Component<{}, PollsAppState> {
         if (DEBUG) console.debug("set state to list");
         this.setState({page: "start"});
     };
+
+    doSaveChange = (names: string[]): void => {
+        this.setState({pollNames: names});
+    }
 }

@@ -6,6 +6,7 @@ import {isRecord} from "./record";
 type NewPollProps = {
     onBackClick: () => void,
     onCreateClick: (name: string) => void
+    pollNames: string[]
 }
 
 type NewPollState = {
@@ -84,6 +85,10 @@ export class NewPoll extends Component<NewPollProps, NewPollState> {
             this.state.minutes.trim().length === 0 ||
             this.state.options.length === 0) {
             this.setState({error: "a required field is missing."});
+            return;
+        }
+        if (this.props.pollNames.includes(this.state.name)) {
+            this.setState({error: `The provided "${this.state.name}" name has already been used`});
             return;
         }
 

@@ -107,6 +107,25 @@ describe('routes', function () {
         assert.ok(Math.abs(endTime8 - Date.now() - 2 * 60 * 1000) < 50);
         assert.deepStrictEqual(res8._getData().poll.options, ["eric1", "eric2", "eric3"]);
 
+        // 7. Repeated names
+        const req11 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/add',
+                body: {name: "couch", minutes: 10, options: ["eric1", "eric2"]}});
+        const res11 = httpMocks.createResponse();
+        addPoll(req11, res11);
+        assert.strictEqual(res11._getStatusCode(), 400);
+        assert.deepStrictEqual(res11._getData(),
+            `The provided "${req11.body.name}" name has already been used`)
+
+        const req12 = httpMocks.createRequest(
+            {method: 'POST', url: '/api/add',
+                body: {name: "couch", minutes: 10, options: ["eric1", "eric2"]}});
+        const res12 = httpMocks.createResponse();
+        addPoll(req12, res12);
+        assert.strictEqual(res12._getStatusCode(), 400);
+        assert.deepStrictEqual(res12._getData(),
+            `The provided "${req12.body.name}" name has already been used`)
+
         resetPollsForTesting();
     });
 
@@ -185,7 +204,7 @@ describe('routes', function () {
         const res1 = httpMocks.createResponse();
         listPolls(req1, res1);
         assert.strictEqual(res1._getStatusCode(), 200);
-        assert.deepStrictEqual(res1._getData(), {polls: []});
+        assert.deepStrictEqual(res1._getData(), {names: [], polls: []});
 
         const req2 = httpMocks.createRequest(
             {method: 'POST', url: '/api/add',
