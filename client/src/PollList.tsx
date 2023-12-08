@@ -3,18 +3,22 @@ import {Component} from "react";
 import React from "react";
 import {isRecord} from "./record";
 
-
+/** Initial states of PollList */
 type ListProps = {
     onNewClick: () => void,
     onPollClick: (name: string) => void
     savePolls: (names: string[]) => void
 }
 
+/** The states of PollList */
 type ListState = {
+    /** The current time */
     now: number,
+    /** The list of polls */
     polls: Poll[] | undefined
 }
 
+/** Shows a list of polls and allows viewing the poll detail by clicking the link. */
 export class PollList extends Component<ListProps, ListState> {
     constructor(props: ListProps) {
         super(props);
