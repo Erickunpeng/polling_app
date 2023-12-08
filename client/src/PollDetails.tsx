@@ -3,39 +3,45 @@ import {ChangeEvent, Component} from "react";
 import React from "react";
 import {isRecord} from "./record";
 
-
+/** Initial states of PollDetails */
 type DetailsProps = {
-    name: string, // name of the poll
+    /** The name of the poll */
+    name: string,
     onBackClick: () => void,
 };
 
+/** The state of PollDetails */
 type DetailsState = {
+    /** The current time */
     now: number,
+    /** The voter's name */
     voter: string
+    /** Voter's option */
     option: string
+    /** The current poll that this page renders */
     poll: Poll | undefined,
+    /** The error message */
     error: string
+    /** The notification if the voter successfully vote the option */
     notification: string
 };
 
-// Shows an individual poll and allows voting (if ongoing).
+/** Shows an individual poll and allows voting (if ongoing). */
 export class PollDetails extends Component<DetailsProps, DetailsState> {
     constructor(props: DetailsProps) {
         super(props);
-
         this.state = {now: Date.now(), voter: "", option: "", poll: undefined, error: "", notification: ""};
     }
 
     componentDidMount = (): void => {
         this.doRefreshClick();
+        this.doTImeChange()
     };
 
-    // componentDidUpdate = (prevProps: DetailsProps): void => {
-    //     if (prevProps !== this.props) {
-    //         this.setState({now: Date.now()});  // Force a refresh
-    //     }
-    //     this.doRefreshClick()
-    // };
+    doTImeChange = (): void => {
+        this.setState({now: Date.now()})
+        setTimeout(this.doTImeChange, 1000)
+    }
 
     render = (): JSX.Element => {
         const fontStyle = {

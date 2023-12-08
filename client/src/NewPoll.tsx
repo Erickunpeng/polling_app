@@ -2,21 +2,29 @@ import React, {ChangeEvent} from "react";
 import {Component} from "react";
 import {isRecord} from "./record";
 
-
+/** Initial states of NewPoll */
 type NewPollProps = {
     onBackClick: () => void,
     onCreateClick: (name: string) => void
+    /** Names of all current polls */
     pollNames: string[]
 }
 
+/** The state of NewPoll */
 type NewPollState = {
+    /** The name of the new poll */
     name: string,
+    /** The minutes duration of the new poll */
     minutes: string,
-    inputOption: string
+    /** The original input options of the new poll */
+    inputOption: string,
+    /** The option list of the new poll */
     options: string[]
+    /** The error message when creating the new poll */
     error: string
 }
 
+/** Shows a new poll and allows creating by entering parameters. */
 export class NewPoll extends Component<NewPollProps, NewPollState> {
     constructor(props: NewPollProps) {
         super(props);

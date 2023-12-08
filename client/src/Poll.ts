@@ -1,23 +1,35 @@
 import {isRecord} from "./record";
 
-// Description of an individual poll
-// RI: options.length, results.length >= 2
+/**
+ * Description of an individual poll
+ * RI: options.length = results.length >= 2
+ */
 export type Poll = {
+    /** The name of poll */
     readonly name: string,
-    readonly minutes: number
+    /** Minutes that the user enters */
+    readonly minutes: number,
+    /** The end time of the poll */
     readonly endTime: number,
+    /** Options that the user enters */
     readonly options: string[],
-    readonly votes: Vote[]
+    /** Votes that the participant posted */
+    readonly votes: Vote[],
+    /** Results of the poll */
     readonly results: Result[]
 }
 
 type Vote = {
+    /** The name of the voter */
     voter: string,
+    /** Voter's option choice */
     option: string
 }
 
 type Result = {
+    /** Option's name */
     option: string,
+    /** Number of votes for this option */
     voteNum: number
 }
 
