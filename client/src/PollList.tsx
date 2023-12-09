@@ -27,12 +27,12 @@ export class PollList extends Component<ListProps, ListState> {
 
     componentDidMount = (): void => {
         this.doRefreshClick();
-        this.doTImeChange()
+        this.doTimeChange()
     }
 
-    doTImeChange = (): void => {
+    doTimeChange = (): void => {
         this.setState({now: Date.now()})
-        setTimeout(this.doTImeChange, 1000)
+        setTimeout(this.doTimeChange, 1000)
     }
 
     componentDidUpdate = (prevProps: ListProps): void => {
